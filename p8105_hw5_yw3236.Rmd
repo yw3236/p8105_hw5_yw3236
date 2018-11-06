@@ -5,22 +5,35 @@ author: "Yishan Wang"
 date: "2018-11-02"
 ---
 
-```{r}
+```{r include = FALSE}
 library(tidyverse)
 library(rvest)
 ```
 
 ```{r}
 multmerge = function(mypath){
+
+  filenames = list.files(path = mypath, full.names = TRUE)  #read file names as a list
+  data = data_frame(filenames) %>%  #create a dataframe
+    mutate(file_contents = purrr::map(filenames, function(x){read.csv(file = x, header = T)})) %>%  #read each file
+    unnest()  #unnest each file
   
-  filenames = list.files(path = mypath, full.names = TRUE)  #read file namesas a list
-  datalist = lapply(filenames, function(x){read.csv(file = x, header = T)})  #read each .csv file
-  names(datalist) = filenames  
+}
+```
+
+This is the second method that using for loop to create filenames column. (`eval=FALSE`)
+```{r eval=FALSE}
+multmerge = function(mypath){
+
+  filenames = list.files(path = mypath, full.names = TRUE)  #read file names as a list
+  datalist = purrr::map(filenames, function(x){read.csv(file = x, header = T)})  #read each csv file and store as a list
+  names(datalist) = filenames
+  names(datalist) = filenames
   for (i in filenames) {
-    datalist[[i]]$source = i
-  }  #create a new column in each element of the list
+   datalist[[i]]$filenames = i  #create a new column for file names
+  }
   Reduce(function(x, y){rbind(x, y)}, datalist)  #combine all elements of the list
-  
+
 }
 ```
 
@@ -30,15 +43,13 @@ mergeddata = multmerge("./data")
 
 ```{r}
 format_merged_data = mergeddata %>%
-  mutate(source = gsub("^./data/", " ", source)) %>%
-  mutate(source = gsub(".csv$", " ", source)) %>%
-  mutate(arm = gsub("([A-Za-z]+).*", "\\1", source)) %>%  #have arm column
-  mutate(id = gsub("con_", " ", source)) %>%
+  mutate(filenames = gsub("^./data/", " ", filenames)) %>%
+  mutate(filenames = gsub(".csv$", " ", filenames)) %>%
+  mutate(arm = gsub("([A-Za-z]+).*", "\\1", filenames)) %>%  #have arm column
+  mutate(id = gsub("con_", " ", filenames)) %>%
   mutate(id = gsub("exp_", " ", id)) %>%
   mutate(id = as.numeric(id)) %>%  #have numeric id column
-  select(-source) %>%
+  select(-filenames) %>%
   gather(key = week, value = obs, week_1:week_8) %>%
   select(id, arm, week, obs) #tidy dataset
-  
 ```
-View(format_merged_data)
