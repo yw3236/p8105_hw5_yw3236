@@ -5,9 +5,12 @@ author: "Yishan Wang"
 date: "2018-11-02"
 ---
 
+# Problem 1
+
 ```{r include = FALSE}
 library(tidyverse)
 library(rvest)
+library(httr)
 ```
 
 ```{r}
@@ -63,3 +66,20 @@ format_merged_data %>%
   labs(x = "Week", y = "Observations")
 ```
 
+### Comment
+
+# Problem 2
+
+### Describe Data
+
+```{r}
+homicides_data = read_csv("https://raw.githubusercontent.com/washingtonpost/data-homicides/master/homicide-data.csv")
+```
+View(homicides_data)
+```{r}
+homicides_data %>%
+  mutate(city_state = paste(city, state, sep = ", ")) %>%
+  mutate(disposition_index = ifelse(disposition == "Closed without arrest" | disposition == "Open/No arrest", 1, 0)) %>%  #create a index 
+  group_by(city) %>%
+  summarise(total_homicides = n(), unsolved_homicides = sum(disposition_index))  #summarize total homicides and unsolved homicides
+```
