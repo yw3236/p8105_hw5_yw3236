@@ -81,7 +81,8 @@ summarised_homicides_data = homicides_data %>%
   mutate(city_state = paste(city, state, sep = ", ")) %>%
   mutate(disposition_index = ifelse(disposition == "Closed without arrest" | disposition == "Open/No arrest", 1, 0)) %>%  #create a index 
   group_by(city) %>%
-  summarise(total_homicides = n(), unsolved_homicides = sum(disposition_index))  #summarize total homicides and unsolved homicides
+  summarise(total_homicides = n(), unsolved_homicides = sum(disposition_index)) %>%  #summarize total homicides and unsolved homicides
+  mutate(total_homicides = as.double(total_homicides))
 ```
 
 ```{r}
@@ -93,5 +94,21 @@ baltimore_test = prop.test(baltimore_unsolved_homicides$unsolved_homicides, balt
 broom::tidy(baltimore_test) %>%
   select(estimate, conf.low, conf.high)  #change test result to a dataframe
 ```
-?prop.test
-View(baltimore)
+
+```{r}
+prop_test = function(city_data){
+  
+  city_data %>%
+    nest(-city) %>%  #nest first
+    mutate(test = purrr::map(data, ~prop.test(.x$unsolved_homicides, .x$total_homicides)),
+           tidied = purrr::map(test, broom::tidy)) %>%  #apply test
+    unnest(tidied, .drop = TRUE) %>%  #unnest
+    select(city, estimate, conf.low, conf.high)
+  
+}
+```
+
+```{r}
+prop_test(summarised_homicides_data)
+```
+
