@@ -13,6 +13,8 @@ library(rvest)
 library(httr)
 ```
 
+Create a tidy dataframe containing data from all participants, including the subject ID, arm, and observations over time:
+
 ```{r}
 multmerge = function(mypath){
 
@@ -59,6 +61,8 @@ format_merged_data = mergeddata %>%
 format_merged_data
 ```
 
+Make a spaghetti plot showing observations on each subject over time:
+
 ```{r}
 format_merged_data %>%
   group_by(id) %>%  #group by id
@@ -85,6 +89,8 @@ The variables `city`, `state`, and `disposition` in the raw dataset are importan
 homicides_data = read_csv("https://raw.githubusercontent.com/washingtonpost/data-homicides/master/homicide-data.csv")
 ```
 
+Create a city_state variable and then summarize within cities to obtain the total number of homicides and the number of unsolved homicides:
+
 ```{r}
 summarised_homicides_data = homicides_data %>%
   mutate(city_state = paste(city, state, sep = ", ")) %>%
@@ -96,6 +102,8 @@ summarised_homicides_data = homicides_data %>%
 summarised_homicides_data
 ```
 
+For the city of Baltimore, MD, use the prop.test function to estimate the proportion of homicides that are unsolved:
+
 ```{r}
 baltimore_unsolved_homicides = summarised_homicides_data %>%
   filter(city == "Baltimore")  #filter Baltimore
@@ -105,6 +113,8 @@ baltimore_test = prop.test(baltimore_unsolved_homicides$unsolved_homicides, balt
 broom::tidy(baltimore_test) %>%
   select(estimate, conf.low, conf.high)  #change test result to a dataframe
 ```
+
+Now run prop.test for each of the cities in your dataset, and extract both the proportion of unsolved homicides and the confidence interval for each. 
 
 ```{r}
 prop_test = function(city_data){
@@ -124,6 +134,8 @@ multicity_test = prop_test(summarised_homicides_data)
 
 multicity_test
 ```
+
+Create a plot that shows the estimates and CIs for each city:
 
 ```{r warning = FALSE}
 multicity_test %>%
