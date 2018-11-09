@@ -55,6 +55,8 @@ format_merged_data = mergeddata %>%
   select(-filenames) %>%
   gather(key = week, value = obs, week_1:week_8) %>%
   select(id, arm, week, obs) #tidy dataset
+
+format_merged_data
 ```
 
 ```{r}
@@ -63,14 +65,21 @@ format_merged_data %>%
   ggplot() +
   geom_line(aes(x = week, y = obs, group = id, color = id)) +
   facet_grid(~arm) +  #compare two groups: con and exp
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = rel(1))) +
   labs(x = "Week", y = "Observations")
 ```
 
 ### Comment
 
+* Observation values of experiment group are higher than the observation values of control group over time.
+
+* Experimental group has increasing trending, but control group stays relatively flat over time. 
+
 # Problem 2
 
 ### Describe Data
+
+The variables `city`, `state`, and `disposition` in the raw dataset are important to analyze this problem. It also has location variables, such as `lat` and `lon`. Futhermore, the dataset includes victims' information. The dataset size is 52,179 * 12.
 
 ```{r}
 homicides_data = read_csv("https://raw.githubusercontent.com/washingtonpost/data-homicides/master/homicide-data.csv")
@@ -83,6 +92,8 @@ summarised_homicides_data = homicides_data %>%
   group_by(city) %>%
   summarise(total_homicides = n(), unsolved_homicides = sum(disposition_index)) %>%  #summarize total homicides and unsolved homicides
   mutate(total_homicides = as.double(total_homicides))
+
+summarised_homicides_data
 ```
 
 ```{r}
@@ -110,13 +121,15 @@ prop_test = function(city_data){
 
 ```{r}
 multicity_test = prop_test(summarised_homicides_data)
+
+multicity_test
 ```
 
-```{r}
+```{r warning = FALSE}
 multicity_test %>%
   ggplot() +
   geom_point(aes(x = reorder(city, estimate), y = estimate)) +  #order cities by the value of estimates
   geom_errorbar(aes(x = reorder(city, estimate), ymin = conf.low, ymax = conf.high, estimate)) +  #add error bar
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size = rel(1))) +
-  labs(x = "City", y = "Estimate Proportion of Unsolved Homicides")
+  labs(x = "City", y = "Estimate Proportion of Unsolved Homicides with 95% CI")
 ```
